@@ -50,7 +50,7 @@
 #include <float.h>
 #include <limits.h>
 
-#define PF_CLM_MAX_ROOT_NZ 20
+#define PF_CLM_MAX_ROOT_NZ 25
 
 /*--------------------------------------------------------------------------
  * Structures
@@ -139,8 +139,8 @@ typedef struct {
   char *clm_file_dir;           /* directory location for CLM files */
   int clm_dump_interval;        /* time interval, integer, for CLM output */
   int clm_1d_out;               /* boolean 0-1, integer, for CLM 1-d output */
-  int clm_forc_veg;             /* boolean 0-1, integer, for CLM vegetation forcing option */
-  /*BH*/ int clm_bin_out_dir;   /* boolean 0-1, integer, for sep dirs for each clm binary output */
+  int clm_forc_veg;             /* boolean 0-1, integer, for CLM vegetation forcing option BH */ 
+  int clm_bin_out_dir;   /* boolean 0-1, integer, for sep dirs for each clm binary output */
   // int                clm_dump_files;     /* boolean 0-1, integer, for write CLM output from PF */
 
   int clm_nz;                   /* Number of CLM soil layers (layers in root zone) */
@@ -153,7 +153,7 @@ typedef struct {
   char *clm_metfile;            /* File name for 1D forcing *or* base name for 2D forcing */
   char *clm_metpath;            /* Path to CLM met forcing file(s) */
   double *sw1d, *lw1d, *prcp1d, /* 1D forcing variables */
-         *tas1d, *u1d, *v1d, *patm1d, *qatm1d, *lai1d, *sai1d, *z0m1d, *displa1d; /* BH: added lai, sai, z0m, displa */
+    *tas1d, *u1d, *v1d, *patm1d, *qatm1d, *lai1d, *sai1d, *z0m1d, *displa1d;    /* BH: added lai, sai, z0m, displa */
 
   int clm_beta_function;        /* CLM evap function for var sat 0=none, 1=linear, 2=cos */
   double clm_res_sat;           /* CLM residual saturation in soil sat units [-] */
@@ -165,7 +165,7 @@ typedef struct {
   int clm_irr_cycle;            /* CLM irrigation cycle flag -- 0=Constant, 1=Deficit */
   double clm_irr_rate;          /* CLM irrigation application rate [mm/s] */
   double clm_irr_start;         /* CLM irrigation schedule -- start time of constant cycle [GMT] */
-  double clm_irr_stop;          /* CLM irrigation schedule -- stop time of constant cycle [GMT] */
+  double clm_irr_stop;          /* CLM irrigation schedule -- stop time of constant cyle [GMT] */
   double clm_irr_threshold;     /* CLM irrigation schedule -- soil moisture threshold for deficit cycle */
   int clm_irr_thresholdtype;    /* Deficit-based saturation criteria (top, bottom, column avg) */
 
@@ -288,7 +288,7 @@ typedef struct {
   Vector *sai_forc;             /* SAI                                                  BH */
   Vector *z0m_forc;             /* Aerodynamic roughness length [m] BH */
   Vector *displa_forc;          /* Displacement height [m]                  BH */
-  Vector *veg_map_forc;         /* Vegetation map [classes 1-18]    BH */
+  Vector *veg_map_forc;         /* Vegetation map [classes 1-19]    BH */
 
   Grid *snglclm;                /* NBE: New grid for single file CLM output */
   Vector *clm_out_grid;         /* NBE - Holds multi-layer, single file output of CLM */
@@ -860,7 +860,7 @@ SetupRichards(PFModule * this_module)
       NewVectorType(grid, 1, 0, vector_cell_centered);
     InitVectorAll(instance_xtra->evap_trans_sum, 0.0);
 
-    /* initialize vel vectors - jjb */
+    /* intialize vel vectors - jjb */
     instance_xtra->x_velocity =
       NewVectorType(x_grid, 1, 1, vector_side_centered_x);
     InitVectorAll(instance_xtra->x_velocity, 0.0);
@@ -1075,13 +1075,14 @@ SetupRichards(PFModule * this_module)
       amps_SFclose(metf1d);
 
       /* BH: added the option to force vegetation or not: here LAI, SAI, Z0M, Displa and pfb vegetation maps are read */
-      (public_xtra->lai1d) = ctalloc(double, nc * 18);
-      (public_xtra->sai1d) = ctalloc(double, nc * 18);
-      (public_xtra->z0m1d) = ctalloc(double, nc * 18);
-      (public_xtra->displa1d) = ctalloc(double, nc * 18);
+      (public_xtra->lai1d) = ctalloc(double, nc * 19); /*BH 18->19*/
+      (public_xtra->sai1d) = ctalloc(double, nc * 19);/*BH 18->19*/
+      (public_xtra->z0m1d) = ctalloc(double, nc * 19);/*BH 18->19*/
+      (public_xtra->displa1d) = ctalloc(double, nc * 19);/*BH 18->19*/
       if (public_xtra->clm_forc_veg == 1)
       {
         /*Reading file LAI */ /*BH*/
+        /*sprintf(filename, "%s/%s", public_xtra -> clm_metpath, public_xtra -> clm_metfile); */
         sprintf(filename, "%s/%s", public_xtra->clm_metpath,
                 "lai.dat");
 
@@ -1093,6 +1094,7 @@ SetupRichards(PFModule * this_module)
         }
         /*assume nc remains the same BH */
         // Read 1D met file to arrays of length nc
+        //(public_xtra -> lai1d) = ctalloc(double,nc*18);
         if ((metf1d = amps_SFopen(filename, "r")) == NULL)
         {
           amps_Printf("Error: can't open file %s \n", filename);
@@ -1102,16 +1104,17 @@ SetupRichards(PFModule * this_module)
         invoice = amps_NewInvoice("%d", &lai);
         for (n = 0; n < nc; n++)
         {
-          for (c = 0; c < 18; c++)
+          for (c = 0; c < 19; c++) /*BH 18->19 to add extra vegetation class*/
           {
             amps_SFBCast(amps_CommWorld, metf1d, invoice);
-            (public_xtra->lai1d)[18 * n + c] = lai;
+            (public_xtra->lai1d)[19 * n + c] = lai;/*BH 18->19 to add extra vegetation class*/
           }
         }
         amps_FreeInvoice(invoice);
         amps_SFclose(metf1d);
 
         /*Reading file SAI */ /*BH*/
+        /*sprintf(filename, "%s/%s", public_xtra -> clm_metpath, public_xtra -> clm_metfile); */
         sprintf(filename, "%s/%s", public_xtra->clm_metpath,
                 "sai.dat");
 
@@ -1123,6 +1126,7 @@ SetupRichards(PFModule * this_module)
         }
         /*assume nc remains the same BH */
         // Read 1D met file to arrays of length nc
+        //(public_xtra -> sai1d) = ctalloc(double,nc*18);
         if ((metf1d = amps_SFopen(filename, "r")) == NULL)
         {
           amps_Printf("Error: can't open file %s \n", filename);
@@ -1132,10 +1136,10 @@ SetupRichards(PFModule * this_module)
         invoice = amps_NewInvoice("%d", &sai);
         for (n = 0; n < nc; n++)
         {
-          for (c = 0; c < 18; c++)
+          for (c = 0; c < 19; c++) /*BH 18->19 to add extra vegetation class*/
           {
             amps_SFBCast(amps_CommWorld, metf1d, invoice);
-            (public_xtra->sai1d)[18 * n + c] = sai;
+            (public_xtra->sai1d)[19 * n + c] = sai;/*BH 18->19 to add extra vegetation class*/
           }
         }
         amps_FreeInvoice(invoice);
@@ -1154,6 +1158,7 @@ SetupRichards(PFModule * this_module)
         }
         /*assume nc remains the same BH */
         // Read 1D met file to arrays of length nc
+        //(public_xtra -> z0m1d) = ctalloc(double,nc*18);
         if ((metf1d = amps_SFopen(filename, "r")) == NULL)
         {
           amps_Printf("Error: can't open file %s \n", filename);
@@ -1163,16 +1168,17 @@ SetupRichards(PFModule * this_module)
         invoice = amps_NewInvoice("%d", &z0m);
         for (n = 0; n < nc; n++)
         {
-          for (c = 0; c < 18; c++)
+          for (c = 0; c < 19; c++)
           {
             amps_SFBCast(amps_CommWorld, metf1d, invoice);
-            (public_xtra->z0m1d)[18 * n + c] = z0m;
+            (public_xtra->z0m1d)[19 * n + c] = z0m;
           }
         }
         amps_FreeInvoice(invoice);
         amps_SFclose(metf1d);
 
         /*Reading file displa */ /*BH*/
+        /*sprintf(filename, "%s/%s", public_xtra -> clm_metpath, public_xtra -> clm_metfile); */
         sprintf(filename, "%s/%s", public_xtra->clm_metpath,
                 "displa.dat");
 
@@ -1184,6 +1190,7 @@ SetupRichards(PFModule * this_module)
         }
         /*assume nc remains the same BH */
         // Read 1D met file to arrays of length nc
+        //(public_xtra -> displa1d) = ctalloc(double,nc*18);
         if ((metf1d = amps_SFopen(filename, "r")) == NULL)
         {
           amps_Printf("Error: can't open file %s \n", filename);
@@ -1193,10 +1200,10 @@ SetupRichards(PFModule * this_module)
         invoice = amps_NewInvoice("%d", &displa);
         for (n = 0; n < nc; n++)
         {
-          for (c = 0; c < 18; c++)
+          for (c = 0; c < 19; c++) /*BH 18 -> 19 add extra vegetation class*/
           {
             amps_SFBCast(amps_CommWorld, metf1d, invoice);
-            (public_xtra->displa1d)[18 * n + c] = displa;
+            (public_xtra->displa1d)[19 * n + c] = displa; /*BH 18 -> 19 add extra vegetation class*/
           }
         }
         amps_FreeInvoice(invoice);
@@ -1331,21 +1338,21 @@ SetupRichards(PFModule * this_module)
        * Print out the initial saturations?
        *-----------------------------------------------------------------*/
 
-      if (print_satur)
-      {
-        sprintf(file_postfix, "satur.%05d", instance_xtra->file_number);
-        WritePFBinary(file_prefix, file_postfix,
-                      instance_xtra->saturation);
-        any_file_dumped = 1;
+    if (print_satur)
+    {
+      sprintf(file_postfix, "satur.%05d", instance_xtra->file_number);
+      WritePFBinary(file_prefix, file_postfix,
+                    instance_xtra->saturation);
+      any_file_dumped = 1;
 
-        static const char* satur_filenames[] = {
-          "satur"
-        };
-        MetadataAddDynamicField(
-                                js_outputs, file_prefix, t, 0, "saturation", NULL, "cell", "subsurface",
-                                sizeof(satur_filenames) / sizeof(satur_filenames[0]),
-                                satur_filenames);
-      }
+      static const char* satur_filenames[] = {
+        "satur"
+      };
+      MetadataAddDynamicField(
+                              js_outputs, file_prefix, t, 0, "saturation", NULL, "cell", "subsurface",
+                              sizeof(satur_filenames) / sizeof(satur_filenames[0]),
+                              satur_filenames);
+    }
 
       if (public_xtra->write_silo_satur)
       {
@@ -1736,7 +1743,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
   int Stepcount = 0;            /* Added for transient EvapTrans file management - NBE */
   int Loopcount = 0;            /* Added for transient EvapTrans file management - NBE */
   double sw = NAN, lw = NAN, prcp = NAN, tas = NAN, u = NAN, v = NAN, patm = NAN, qatm = NAN;   // IMF: 1D forcing vars (local to AdvanceRichards)
-  double lai[18], sai[18], z0m[18], displa[18]; /*BH: array with lai/sai/z0m/displa values for each veg class */
+  double lai[19], sai[19], z0m[19], displa[19]; /*BH: array with lai/sai/z0m/displa values for each veg class */
   double *sw_data = NULL;
   double *lw_data = NULL;
   double *prcp_data = NULL;     // IMF: 2D forcing vars (SubvectorData) (local to AdvanceRichards)
@@ -1745,13 +1752,11 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
   double *v_data = NULL;
   double *patm_data = NULL;
   double *qatm_data = NULL;
-  double *lai_data = NULL;
-  /*BH*/ double *sai_data = NULL;
-  /*BH*/ double *z0m_data = NULL;
-  /*BH*/ double *displa_data = NULL;
-  /*BH*/ double *veg_map_data = NULL;
-  /*BH*/                        /*will fail if veg_map_data is declared as int */
-
+  double *lai_data = NULL; /*BH*/
+  double *sai_data = NULL; /*BH*/ 
+  double *z0m_data = NULL; /*BH*/ 
+  double *displa_data = NULL; /*BH*/ 
+  double *veg_map_data = NULL;/*BH*/			/*will fail if veg_map_data is declared as int */
   Subvector *sw_forc_sub, *lw_forc_sub, *prcp_forc_sub, *tas_forc_sub, *u_forc_sub, *v_forc_sub, *patm_forc_sub, *qatm_forc_sub, *lai_forc_sub, *sai_forc_sub, *z0m_forc_sub, *displa_forc_sub, *veg_map_forc_sub;      /*BH: added LAI/SAI/Z0M/DISPLA/vegmap */
 
   /* Slopes */
@@ -1958,6 +1963,8 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
 #ifdef HAVE_CLM
       BeginTiming(CLMTimingIndex);
 
+      // SGS FIXME this should not be here, should not be reading input at this point
+      // Should get these values from somewhere else.
       /* sk: call to the land surface model/subroutine */
       /* sk: For the couple with CLM */
       int p = GlobalsP;
@@ -1986,14 +1993,13 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
           qatm = (public_xtra->qatm1d)[istep - 1];
 
           /*BH: populating vegetation vectors */
-          for (c = 0; c < 18; c++)
+          for (c = 0; c < 19; c++) /*BH 18->19 to add vegetation class*/
           {
-            lai[c] = (public_xtra->lai1d)[(istep - 1) * 18 + c];
+            lai[c] = (public_xtra->lai1d)[(istep - 1) * 19 + c];/*BH 18->19 to add vegetation class*/
             /*printf("LAI by class: class %d: value %f\n",c,lai[c]); */
-            sai[c] = (public_xtra->sai1d)[(istep - 1) * 18 + c];
-            z0m[c] = (public_xtra->z0m1d)[(istep - 1) * 18 + c];
-            displa[c] =
-              (public_xtra->displa1d)[(istep - 1) * 18 + c];
+            sai[c] = (public_xtra->sai1d)[(istep - 1) * 19 + c];/*BH 18->19 to add vegetation class*/
+            z0m[c] = (public_xtra->z0m1d)[(istep - 1) * 19 + c];/*BH 18->19 to add vegetation class*/
+            displa[c] = (public_xtra->displa1d)[(istep - 1) * 19 + c];/*BH 18->19 to add vegetation class*/
           }
 
           /*BH: end populating vegetation vectors */
@@ -3919,6 +3925,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
       {
         if (public_xtra->single_clm_file)       //NBE
         {
+          int nz; /*BH: declaration of number of z layers for extracting surface pressure */
           // NBE: CLM single file output
           PFVLayerCopy(0, 0, instance_xtra->clm_out_grid,
                        instance_xtra->eflx_lh_tot);
@@ -3944,24 +3951,27 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
                        instance_xtra->swe_out);
           PFVLayerCopy(11, 0, instance_xtra->clm_out_grid,
                        instance_xtra->t_grnd);
-
+          nz = SubgridNZ(subgrid);/*BH: number of z layers for extracting surface pressure*/
+          /*BH: add surface pressure (pp, layer nz-1) to CLM pfb output (for higher sampling)*/
+          /*BH: modify subsequent indices... :*/
+          PFVLayerCopy(12, nz-1, instance_xtra -> clm_out_grid, instance_xtra -> pressure);/*BH*/			 
           if (public_xtra->clm_irr_type == 1
               || public_xtra->clm_irr_type == 2)
           {
-            PFVLayerCopy(12, 0, instance_xtra->clm_out_grid,
-                         instance_xtra->qflx_qirr);
+            PFVLayerCopy(13, 0, instance_xtra -> clm_out_grid,
+                         instance_xtra->qflx_qirr); /*BH (ind 12->13)*/
           }
           if (public_xtra->clm_irr_type == 3)
           {
-            PFVLayerCopy(12, 0, instance_xtra->clm_out_grid,
-                         instance_xtra->qflx_qirr_inst);
+            PFVLayerCopy(13, 0, instance_xtra->clm_out_grid,
+                         instance_xtra->qflx_qirr_inst); /*BH (ind 12->13)*/
           }
 
           for (k = 0; k < public_xtra->clm_nz; k++)
           {
             //Write out the bottom layer in the lowest index position, build upward
-            PFVLayerCopy(13 + k, k, instance_xtra->clm_out_grid,
-                         instance_xtra->tsoil);
+            PFVLayerCopy(14 + k, k, instance_xtra->clm_out_grid,
+                         instance_xtra->tsoil);/*BH (ind 13->14)*/
           }
           /* NBE: added .C instead of writing a different write function with
            * a different extension since PFB is hard-wired */
