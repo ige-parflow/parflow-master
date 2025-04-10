@@ -265,6 +265,14 @@ typedef struct {
   Vector *qflx_tran_veg;        /* trans from veg [mm/s] */
   Vector *qflx_infl;            /* infiltration [mm/s] */
   Vector *swe_out;              /* snow water equivalent [mm] */
+   /* @LRH (JMC) add outputs */
+  Vector *snd_out;              /* snow depth */
+  Vector *snoalb_out;           /* snow albedo */
+  Vector *surfalb_out;          /* surface albedo */
+  Vector *snowage_out;          /* snow age [-] */
+  Vector *ndvi_out;             /* ndvi */
+  Vector *qflx_snomelt_out;     /* snow depth */
+  /* @LRH (JMC) end add outputs */
   Vector *t_grnd;               /* CLM soil surface temperature [K] */
   Vector *tsoil;                /* CLM soil temp, all 10 layers [K] */
   Grid *gridTs;                 /* New grid for tsoil (nx*ny*10) */
@@ -956,6 +964,34 @@ SetupRichards(PFModule * this_module)
       NewVectorType(grid2d, 1, 1, vector_cell_centered_2D);
     InitVectorAll(instance_xtra->swe_out, 0.0);
 
+/*@LRH (JMC) add outputs*/
+    instance_xtra->snd_out =
+      NewVectorType(grid2d, 1, 1, vector_cell_centered_2D);
+    InitVectorAll(instance_xtra->snd_out, 0.0);
+
+    instance_xtra->snoalb_out =
+      NewVectorType(grid2d, 1, 1, vector_cell_centered_2D);
+    InitVectorAll(instance_xtra->snoalb_out, 0.0);
+
+    instance_xtra->surfalb_out =
+      NewVectorType(grid2d, 1, 1, vector_cell_centered_2D);
+    InitVectorAll(instance_xtra->surfalb_out, 0.0);
+
+    instance_xtra->snowage_out =
+      NewVectorType(grid2d, 1, 1, vector_cell_centered_2D);
+    InitVectorAll(instance_xtra->snowage_out, 0.0);
+
+    instance_xtra->ndvi_out =
+      NewVectorType(grid2d, 1, 1, vector_cell_centered_2D);
+    InitVectorAll(instance_xtra->ndvi_out, 0.0);
+
+    instance_xtra->qflx_snomelt_out =
+      NewVectorType(grid2d, 1, 1, vector_cell_centered_2D);
+    InitVectorAll(instance_xtra->qflx_snomelt_out, 0.0);
+
+    /*@LRH (JMC) end add outputs*/
+
+
     instance_xtra->t_grnd =
       NewVectorType(grid2d, 1, 1, vector_cell_centered_2D);
     InitVectorAll(instance_xtra->t_grnd, 0.0);
@@ -1168,10 +1204,10 @@ SetupRichards(PFModule * this_module)
         invoice = amps_NewInvoice("%d", &z0m);
         for (n = 0; n < nc; n++)
         {
-          for (c = 0; c < 19; c++)
+          for (c = 0; c < 19; c++) /*BH 18->19 to add extra vegetation class*/
           {
             amps_SFBCast(amps_CommWorld, metf1d, invoice);
-            (public_xtra->z0m1d)[19 * n + c] = z0m;
+            (public_xtra->z0m1d)[19 * n + c] = z0m;/*BH 18->19 to add extra vegetation class*/
           }
         }
         amps_FreeInvoice(invoice);
@@ -1200,10 +1236,10 @@ SetupRichards(PFModule * this_module)
         invoice = amps_NewInvoice("%d", &displa);
         for (n = 0; n < nc; n++)
         {
-          for (c = 0; c < 19; c++) /*BH 18 -> 19 add extra vegetation class*/
+          for (c = 0; c < 19; c++) /*BH 18->19 to add extra vegetation class*/
           {
             amps_SFBCast(amps_CommWorld, metf1d, invoice);
-            (public_xtra->displa1d)[19 * n + c] = displa; /*BH 18 -> 19 add extra vegetation class*/
+            (public_xtra->displa1d)[19 * n + c] = displa; /*BH 18->19 to add extra vegetation class*/
           }
         }
         amps_FreeInvoice(invoice);
@@ -1763,16 +1799,16 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
   Subvector *slope_x_sub, *slope_y_sub;
   double *slope_x_data, *slope_y_data;
 
-  /* IMF: For writing CLM output */
+  /* IMF: For writing CLM output; @LRH(JMC) add snow outputs variables */
   Subvector *eflx_lh_tot_sub, *eflx_lwrad_out_sub, *eflx_sh_tot_sub,
-            *eflx_soil_grnd_sub, *qflx_evap_tot_sub, *qflx_evap_grnd_sub,
-            *qflx_evap_soi_sub, *qflx_evap_veg_sub, *qflx_tran_veg_sub,
-            *qflx_infl_sub, *swe_out_sub, *t_grnd_sub, *tsoil_sub, *irr_flag_sub,
-            *qflx_qirr_sub, *qflx_qirr_inst_sub;
+    *eflx_soil_grnd_sub, *qflx_evap_tot_sub, *qflx_evap_grnd_sub,
+    *qflx_evap_soi_sub, *qflx_evap_veg_sub, *qflx_tran_veg_sub,
+    *qflx_infl_sub, *swe_out_sub, *snd_out_sub, *snoalb_out_sub, *surfalb_out_sub, *snowage_out_sub, *ndvi_out_sub, *qflx_snomelt_out_sub, *t_grnd_sub, *tsoil_sub, *irr_flag_sub,
+    *qflx_qirr_sub, *qflx_qirr_inst_sub;
 
   double *eflx_lh, *eflx_lwrad, *eflx_sh, *eflx_grnd, *qflx_tot, *qflx_grnd,
-         *qflx_soi, *qflx_eveg, *qflx_tveg, *qflx_in, *swe, *t_g, *t_soi, *iflag,
-         *qirr, *qirr_inst;
+    *qflx_soi, *qflx_eveg, *qflx_tveg, *qflx_in, *swe, *snd, *snoalb, *surfalb, *snowage, *ndvi, *qflx_snomelt, *t_g, *t_soi, *iflag,
+    *qirr, *qirr_inst;
   int clm_file_dir_length;
 
   double print_cdt;
@@ -2348,7 +2384,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         po_sub = VectorSubvector(porosity, is);
         dz_sub = VectorSubvector(instance_xtra->dz_mult, is);
 
-        /* IMF: Subvectors -- CLM surface fluxes, SWE, t_grnd */
+        /* IMF: Subvectors -- CLM surface fluxes, SWE, snd and others (LRH (JMC)), t_grnd */
         eflx_lh_tot_sub =
           VectorSubvector(instance_xtra->eflx_lh_tot, is);
         eflx_lwrad_out_sub =
@@ -2369,6 +2405,13 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
           VectorSubvector(instance_xtra->qflx_tran_veg, is);
         qflx_infl_sub = VectorSubvector(instance_xtra->qflx_infl, is);
         swe_out_sub = VectorSubvector(instance_xtra->swe_out, is);
+        snd_out_sub = VectorSubvector(instance_xtra->snd_out, is);
+        snoalb_out_sub = VectorSubvector(instance_xtra->snoalb_out, is);
+        surfalb_out_sub = VectorSubvector(instance_xtra->surfalb_out, is);
+        snowage_out_sub = VectorSubvector(instance_xtra->snowage_out, is);
+        ndvi_out_sub = VectorSubvector(instance_xtra->ndvi_out, is);
+        qflx_snomelt_out_sub = VectorSubvector(instance_xtra->qflx_snomelt_out, is);
+        t_grnd_sub = VectorSubvector(instance_xtra->t_grnd, is);
         t_grnd_sub = VectorSubvector(instance_xtra->t_grnd, is);
         tsoil_sub = VectorSubvector(instance_xtra->tsoil, is);
         irr_flag_sub = VectorSubvector(instance_xtra->irr_flag, is);
@@ -2425,7 +2468,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         po_dat = SubvectorData(po_sub);
         dz_dat = SubvectorData(dz_sub);
 
-        /* IMF: Subvector Data -- CLM surface fluxes, SWE, t_grnd */
+        /* IMF: Subvector Data -- CLM surface fluxes, SWE, snd and others (JMC), t_grnd */
         eflx_lh = SubvectorData(eflx_lh_tot_sub);
         eflx_lwrad = SubvectorData(eflx_lwrad_out_sub);
         eflx_sh = SubvectorData(eflx_sh_tot_sub);
@@ -2437,6 +2480,12 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
         qflx_tveg = SubvectorData(qflx_tran_veg_sub);
         qflx_in = SubvectorData(qflx_infl_sub);
         swe = SubvectorData(swe_out_sub);
+        snd = SubvectorData(snd_out_sub);
+        snoalb = SubvectorData(snoalb_out_sub);
+        surfalb = SubvectorData(surfalb_out_sub);
+        snowage = SubvectorData(snowage_out_sub);
+        ndvi = SubvectorData(ndvi_out_sub);
+        qflx_snomelt = SubvectorData(qflx_snomelt_out_sub);
         t_g = SubvectorData(t_grnd_sub);
         t_soi = SubvectorData(tsoil_sub);
         iflag = SubvectorData(irr_flag_sub);
@@ -2550,6 +2599,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
           case 1:
           {
             /*BH: added vegetation forcings and associated option (clm_forc_veg) */
+            /*LRH (JMC) : add outputs*/
             clm_file_dir_length = strlen(public_xtra->clm_file_dir);
             CALL_CLM_LSM(pp, sp, et, ms, po_dat, dz_dat, istep, cdt, t,
                          start_time, dx, dy, dz, ix, iy, nx, ny, nz,
@@ -2560,7 +2610,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
                          slope_x_data, slope_y_data,
                          eflx_lh, eflx_lwrad, eflx_sh,
                          eflx_grnd, qflx_tot, qflx_grnd, qflx_soi,
-                         qflx_eveg, qflx_tveg, qflx_in, swe, t_g,
+                         qflx_eveg, qflx_tveg, qflx_in, swe, snd, snoalb, surfalb, snowage, ndvi, qflx_snomelt, t_g,
                          t_soi, public_xtra->clm_dump_interval,
                          public_xtra->clm_1d_out,
                          public_xtra->clm_forc_veg,
@@ -3817,6 +3867,44 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
                   instance_xtra->swe_out, t,
                   instance_xtra->file_number, "SWE");
         clm_file_dumped = 1;
+        
+/*@LRH (JMC) add outputs*/
+        sprintf(file_type, "snd_out");
+        WriteSilo(file_prefix, file_type, file_postfix,
+                  instance_xtra->snd_out, t,
+                  instance_xtra->file_number, "SND");
+        clm_file_dumped = 1;
+
+        sprintf(file_type, "snoalb_out");
+        WriteSilo(file_prefix, file_type, file_postfix,
+                  instance_xtra->snoalb_out, t,
+                  instance_xtra->file_number, "SnowAlbedo");
+        clm_file_dumped = 1;
+
+        sprintf(file_type, "surfalb_out");
+        WriteSilo(file_prefix, file_type, file_postfix,
+                  instance_xtra->surfalb_out, t,
+                  instance_xtra->file_number, "SurfaceAlbedo");
+        clm_file_dumped = 1;
+
+        sprintf(file_type, "snowage_out");
+        WriteSilo(file_prefix, file_type, file_postfix,
+                  instance_xtra->snowage_out, t,
+                  instance_xtra->file_number, "SnowAge");
+        clm_file_dumped = 1;
+
+        sprintf(file_type, "ndvi_out");
+        WriteSilo(file_prefix, file_type, file_postfix,
+                  instance_xtra->ndvi_out, t,
+                  instance_xtra->file_number, "NDVI");
+        clm_file_dumped = 1;
+
+        sprintf(file_type, "qflx_snomelt_out");
+        WriteSilo(file_prefix, file_type, file_postfix,
+                  instance_xtra->qflx_snomelt_out, t,
+                  instance_xtra->file_number, "MeltRate");
+        clm_file_dumped = 1;
+/*@LRH (JMC) end add outputs*/
 
         sprintf(file_type, "t_grnd");
         WriteSilo(file_prefix, file_type, file_postfix,
@@ -3899,6 +3987,20 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
                    public_xtra->numCLMVarTimeVariant, "qflx_infl", 2);
         WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra->swe_out,
                    public_xtra->numCLMVarTimeVariant, "swe_out", 2);
+/*@LRH (JMC) add outputs*/
+		WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra->snd_out,
+                   public_xtra->numCLMVarTimeVariant, "snd_out", 2);
+        WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra->snoalb_out,
+                   public_xtra->numCLMVarTimeVariant, "snoalb_out", 2);
+        WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra->surfalb_out,
+                   public_xtra->numCLMVarTimeVariant, "surfalb_out", 2);
+        WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra->snowage_out,
+                   public_xtra->numCLMVarTimeVariant, "snowage_out", 2);
+        WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra->ndvi_out,
+                   public_xtra->numCLMVarTimeVariant, "ndvi_out", 2);				   
+		WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra->qflx_snomelt_out,
+                   public_xtra->numCLMVarTimeVariant, "qflx_snomelt_out", 2);		   
+/*@LRH (JMC) end add outputs*/
         WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra->t_grnd,
                    public_xtra->numCLMVarTimeVariant, "t_grnd", 2);
         WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra->tsoil,
@@ -3925,7 +4027,7 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
       {
         if (public_xtra->single_clm_file)       //NBE
         {
-          int nz; /*BH: declaration of number of z layers for extracting surface pressure */
+          int nz; /*BH: declaration of number of z layers for extracting surface pressure*/
           // NBE: CLM single file output
           PFVLayerCopy(0, 0, instance_xtra->clm_out_grid,
                        instance_xtra->eflx_lh_tot);
@@ -3949,28 +4051,42 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
                        instance_xtra->qflx_infl);
           PFVLayerCopy(10, 0, instance_xtra->clm_out_grid,
                        instance_xtra->swe_out);
+/*@LRH (JMC) add outputs*/                       
           PFVLayerCopy(11, 0, instance_xtra->clm_out_grid,
+                       instance_xtra->snd_out);
+          PFVLayerCopy(12, 0, instance_xtra->clm_out_grid,
+                       instance_xtra->snoalb_out);
+          PFVLayerCopy(13, 0, instance_xtra->clm_out_grid,
+                       instance_xtra->surfalb_out);
+          PFVLayerCopy(14, 0, instance_xtra->clm_out_grid,
+                       instance_xtra->snowage_out);
+          PFVLayerCopy(15, 0, instance_xtra->clm_out_grid,
+                       instance_xtra->ndvi_out);
+          PFVLayerCopy(16, 0, instance_xtra->clm_out_grid,
+                       instance_xtra->qflx_snomelt_out);
+/*@LRH (JMC) end add outputs*/                         
+          PFVLayerCopy(17, 0, instance_xtra->clm_out_grid,
                        instance_xtra->t_grnd);
           nz = SubgridNZ(subgrid);/*BH: number of z layers for extracting surface pressure*/
           /*BH: add surface pressure (pp, layer nz-1) to CLM pfb output (for higher sampling)*/
           /*BH: modify subsequent indices... :*/
-          PFVLayerCopy(12, nz-1, instance_xtra -> clm_out_grid, instance_xtra -> pressure);/*BH*/			 
+          PFVLayerCopy(18, nz-1, instance_xtra -> clm_out_grid, instance_xtra -> pressure);/*BH - LRH -JMC 13 -> 18*/			 
           if (public_xtra->clm_irr_type == 1
               || public_xtra->clm_irr_type == 2)
           {
-            PFVLayerCopy(13, 0, instance_xtra -> clm_out_grid,
-                         instance_xtra->qflx_qirr); /*BH (ind 12->13)*/
+            PFVLayerCopy(19, 0, instance_xtra -> clm_out_grid,
+                         instance_xtra->qflx_qirr); /*BH (ind 12->19)*/
           }
           if (public_xtra->clm_irr_type == 3)
           {
-            PFVLayerCopy(13, 0, instance_xtra->clm_out_grid,
+            PFVLayerCopy(19, 0, instance_xtra->clm_out_grid,
                          instance_xtra->qflx_qirr_inst); /*BH (ind 12->13)*/
           }
 
           for (k = 0; k < public_xtra->clm_nz; k++)
           {
             //Write out the bottom layer in the lowest index position, build upward
-            PFVLayerCopy(14 + k, k, instance_xtra->clm_out_grid,
+            PFVLayerCopy(20 + k, k, instance_xtra->clm_out_grid,
                          instance_xtra->tsoil);/*BH (ind 13->14)*/
           }
           /* NBE: added .C instead of writing a different write function with
@@ -4056,6 +4172,44 @@ AdvanceRichards(PFModule * this_module, double start_time,      /* Starting time
           WritePFBinary(file_prefix, file_postfix,
                         instance_xtra->swe_out);
           clm_file_dumped = 1;
+          
+/*@LRH (JMC) add outputs*/
+          sprintf(file_postfix, "snd_out.%05d",
+                  instance_xtra->file_number);
+          WritePFBinary(file_prefix, file_postfix,
+                        instance_xtra->snd_out);
+          clm_file_dumped = 1;
+
+          sprintf(file_postfix, "snoalb_out.%05d",
+                  instance_xtra->file_number);
+          WritePFBinary(file_prefix, file_postfix,
+                        instance_xtra->snoalb_out);
+          clm_file_dumped = 1;
+
+          sprintf(file_postfix, "surfalb_out.%05d",
+                  instance_xtra->file_number);
+          WritePFBinary(file_prefix, file_postfix,
+                        instance_xtra->surfalb_out);
+          clm_file_dumped = 1;
+
+          sprintf(file_postfix, "snowage_out.%05d",
+                  instance_xtra->file_number);
+          WritePFBinary(file_prefix, file_postfix,
+                        instance_xtra->snowage_out);
+          clm_file_dumped = 1;
+
+          sprintf(file_postfix, "ndvi_out.%05d",
+                  instance_xtra->file_number);
+          WritePFBinary(file_prefix, file_postfix,
+                        instance_xtra->ndvi_out);
+          clm_file_dumped = 1;
+
+          sprintf(file_postfix, "qflx_snomelt_out.%05d",
+                  instance_xtra->file_number);
+          WritePFBinary(file_prefix, file_postfix,
+                        instance_xtra->qflx_snomelt_out);
+          clm_file_dumped = 1;
+/*@LRH (JMC) end add outputs*/
 
           sprintf(file_postfix, "t_grnd.%05d",
                   instance_xtra->file_number);
@@ -4439,6 +4593,14 @@ TeardownRichards(PFModule * this_module)
     FreeVector(instance_xtra->qflx_tran_veg);
     FreeVector(instance_xtra->qflx_infl);
     FreeVector(instance_xtra->swe_out);
+	/*@LRH (JMC) add outputs*/
+    FreeVector(instance_xtra->snd_out);
+    FreeVector(instance_xtra->snoalb_out);
+    FreeVector(instance_xtra->surfalb_out);
+    FreeVector(instance_xtra->snowage_out);
+    FreeVector(instance_xtra->ndvi_out);
+    FreeVector(instance_xtra->qflx_snomelt_out);
+	/*@LRH (JMC) end add outputs*/
     FreeVector(instance_xtra->t_grnd);
     FreeVector(instance_xtra->tsoil);
 
@@ -4712,7 +4874,7 @@ SolverRichardsInitInstanceXtra()
       subgrid = SubgridArraySubgrid(all_subgrids, i);
       new_subgrid = DuplicateSubgrid(subgrid);
       SubgridIZ(new_subgrid) = 0;
-      SubgridNZ(new_subgrid) = 13 + public_xtra->clm_nz;
+      SubgridNZ(new_subgrid) = 20 + public_xtra->clm_nz; /*BH ind 13->14 for adding top pressure output @LRH - JMC ->20 for snow outputs*/
       AppendSubgrid(new_subgrid, new_all_subgrids);
     }
     new_subgrids = GetGridSubgrids(new_all_subgrids);
