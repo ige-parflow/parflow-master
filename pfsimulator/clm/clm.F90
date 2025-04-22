@@ -187,7 +187,7 @@ clm_last_rst,clm_daily_rst,rz_water_stress_typepf, pf_nlevsoi, pf_nlevlak)
   drv%nc = nx
   drv%nr = ny                   
   drv%nt = 19                  ! 18 IGBP land cover classes: BH add 1 class
-  drv%ts = dt*3600.d0          ! Assume PF in hours, CLM in seconds
+  drv%ts = dt*60.d0          ! Assume PF in hours, CLM in seconds
   j_incr = nx_f
   k_incr = nx_f*ny_f
 
@@ -455,7 +455,7 @@ clm_last_rst,clm_daily_rst,rz_water_stress_typepf, pf_nlevsoi, pf_nlevlak)
                                + exp(-tile(t)%rootb*clm(t)%zi(nlevsoi-1)))
            ! account for vertical root fraction distribution for trees !BH
            if (tile(t)%vegt == 7) then
-              maxd=3
+              maxd=10
               do bj = 1, nlevsoi
                  if (clm(t)%zi(bj)<=maxd) then
                     bk=bj

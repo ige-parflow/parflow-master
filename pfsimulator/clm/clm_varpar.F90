@@ -18,8 +18,8 @@ module clm_varpar
 
 ! define level parameters
 
-  integer,parameter :: max_nlevsoi     =  25   !number of soil levels, should be set from input
-  integer,parameter :: max_nlevlak     =  25   !number of lake levels, should be set from input
+  integer,parameter :: max_nlevsoi     =  29   !number of soil levels, should be set from input
+  integer,parameter :: max_nlevlak     =  29   !number of lake levels, should be set from input
 
   integer:: nlevsoi     =  100   !number of soil levels, should be set from input
   integer:: nlevlak     =  100   !number of lake levels, should be set from input

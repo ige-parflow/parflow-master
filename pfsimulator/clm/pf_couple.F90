@@ -56,7 +56,7 @@ subroutine pf_couple(drv,clm,tile,evap_trans,saturation,pressure,porosity,nx,ny,
            endif
            ! copy back to pf, assumes timing for pf is hours and timing for clm is seconds
            ! IMF: replaced drv%dz with clm(t)%dz to allow variable DZ...
-           evap_trans(l) = clm(t)%pf_flux(k) * 3.6d0 / clm(t)%dz(k)
+           evap_trans(l) = clm(t)%pf_flux(k) * 0.06d0 / clm(t)%dz(k)
         enddo  !! soil loop for uniform T
         else    !! weighted Transpiration over RZ by water stress
         !!  first check to see if total_soil_resistance is zero, set to 1.  This should only happen if T is turned off (and btran ==0)
@@ -73,7 +73,7 @@ subroutine pf_couple(drv,clm,tile,evap_trans,saturation,pressure,porosity,nx,ny,
         endif
         ! copy back to pf, assumes timing for pf is hours and timing for clm is seconds
         ! IMF: replaced drv%dz with clm(t)%dz to allow variable DZ...
-        evap_trans(l) = clm(t)%pf_flux(k) * 3.6d0 / clm(t)%dz(k)
+        evap_trans(l) = clm(t)%pf_flux(k) * 0.06d0 / clm(t)%dz(k)
         enddo   !! end loop for non-uniform T
         end if   !! if for rzwaterstress
 
