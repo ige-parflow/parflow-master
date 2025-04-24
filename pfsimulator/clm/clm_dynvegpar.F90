@@ -81,6 +81,12 @@ subroutine clm_dynvegpar (clm)
   
 ! Fraction of soil covered by snow
 
-  clm%frac_sno = clm%snowdp/(10.*clm%zlnd + clm%snowdp)  
+!  clm%frac_sno = clm%snowdp/(10.*clm%zlnd + clm%snowdp)
+!@JMC to avoid snow fraction for small scale
+  if (clm%snowdp > 0) then
+     clm%frac_sno = 1
+  else
+     clm%frac_sno = 0
+  endif 
 
 end subroutine clm_dynvegpar
