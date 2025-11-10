@@ -38,7 +38,7 @@ subroutine clm_soilalb (clm, coszen, nband, albsnd, albsni)
 ! LRH modifies albsod 
   do ib = 1, nband
      if (clm%itypwat == istsoil)  then               !soil
-        inc    = max(0.17-0.6*clm%h2osoi_vol(1), 0._r8) ! v0 : inc    = max(0.11-0.4*clm%h2osoi_vol(1), 0._r8)
+        inc    = max(0.11-0.4*clm%h2osoi_vol(1), 0._r8) !ARY rollback from : inc    = max(0.17-0.6*clm%h2osoi_vol(1), 0._r8) 
         albsod = min(albsat(clm%isoicol,ib)+inc, albdry(clm%isoicol,ib))
         albsoi = albsod
      else if (clm%itypwat == istice)  then           !land ice
