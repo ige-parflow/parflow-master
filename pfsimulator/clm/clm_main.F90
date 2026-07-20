@@ -183,6 +183,9 @@ subroutine clm_main (clm,day,gmt)
 
   call clm_coszen (clm,day,coszen)
 
+  ! @AXRY/@RMM 2025: Store coszen for use in meltfreeze SZA damping
+  clm%coszen = coszen
+
   call clm_surfalb (clm,coszen)
 
   ! -----------------------------------------------------------------
@@ -285,6 +288,8 @@ subroutine clm_main (clm,day,gmt)
 
         if (clm%snl > -nlevsno) then
            clm%snowage = 0.
+           clm%snowage_vis = 0.   ! @AXRY/@RMM 2025
+           clm%snowage_nir = 0.   ! @AXRY/@RMM 2025
            do j = -nlevsno+1, clm%snl
               clm%h2osoi_ice(j) = 0.
               clm%h2osoi_liq(j) = 0.

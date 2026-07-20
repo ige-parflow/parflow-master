@@ -33,9 +33,15 @@ subroutine clm_dynvegpar (clm)
   type (clm1d)   :: clm 
 
 !=== Local Variables =====================================================
+!@AXRY
 
   real(r8) seasb   !temperature dependence of vegetation cover [-]
   real(r8) fb      !fraction of canopy layer covered by snow
+  real(r8) tau_seconds  !EMA smoothing window in seconds
+  real(r8) alpha_ema    !EMA blending coefficient
+  real(r8) coszen_pos   !non-negative coszen
+  real(r8) z0_eff       !effective roughness length for SZA frac_sno
+  real(r8) w_sza        !SZA interpolation weight
 
 !=== End Variable List ===================================================
 
@@ -80,9 +86,39 @@ subroutine clm_dynvegpar (clm)
   endif
   
 ! Fraction of soil covered by snow
+! @AXRY/@RMM 2025: Added configurable frac_sno schemes and adjustable roughness parameter
 
-!  clm%frac_sno = clm%snowdp/(10.*clm%zlnd + clm%snowdp)
-!@JMC to avoid snow fraction for small scale
+! Update exponentially smoothed coszen for SZA-modulated frac_sno
+  if (clm%frac_sno_type == 1) then
+     tau_seconds = clm%frac_sno_tau_sza * 3600.0d0
+     alpha_ema = min(1.0d0, clm%dtime / tau_seconds)
+     coszen_pos = max(0.0d0, clm%coszen)
+     if (clm%coszen_avg < 1.0d-10 .and. coszen_pos > 0.0d0) then
+        clm%coszen_avg = coszen_pos
+     else
+        clm%coszen_avg = alpha_ema * coszen_pos &
+             + (1.0d0 - alpha_ema) * clm%coszen_avg
+     endif
+  endif
+
+  select case (clm%frac_sno_type)
+
+  case (0)  ! CLM default
+     ! Use configurable roughness parameter (defaults to zlnd for backward compatibility)
+     clm%frac_sno = clm%snowdp / (10.0d0 * clm%frac_sno_roughness + clm%snowdp)
+
+  case (1)  ! SZA-modulated fractional snow cover (interpolation form)
+     w_sza = clm%coszen_avg ** clm%frac_sno_gamma_sza
+     z0_eff = clm%frac_sno_roughness_min * (1.0d0 - w_sza) &
+          + clm%frac_sno_roughness_max * w_sza
+     clm%frac_sno = clm%snowdp / (10.0d0 * z0_eff + clm%snowdp)
+
+  case default  ! Default to CLM formulation
+     clm%frac_sno = clm%snowdp / (10.0d0 * clm%frac_sno_roughness + clm%snowdp)
+
+  end select
+
+ ! @AXRY set no fractionnal snow cover due to resolution
   if (clm%snowdp > 0) then
      clm%frac_sno = 1
   else
