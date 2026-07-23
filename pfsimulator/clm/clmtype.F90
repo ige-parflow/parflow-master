@@ -254,14 +254,7 @@ module clmtype
      integer  :: threshold_type ! irrigation threshold type -- top layer, bottom layer, column avg.
      real(r8) :: irr_flag       ! flag for irrigation or non-irrigation for a given day (based on threshold)
      
-     real(r8) :: eflx_snomelt   ! added to be consistent with lsm hybrid code
-     real(r8) :: eflx_impsoil   ! implicit evaporation for soil temperature equation (W/m**2)
-     real(r8) :: eflx_lh_vege   ! veg evaporation heat flux (W/m**2) [+ to atm]
-     real(r8) :: eflx_lh_vegt   ! veg transpiration heat flux (W/m**2) [+ to atm]
-     real(r8) :: eflx_lh_grnd   ! ground evaporation heat flux (W/m**2) [+ to atm]   
-     real(r8) :: eflx_lwrad_net ! net infrared (longwave) rad (W/m**2) [+ = to atm]
-
-! Snow parameterization options @AXRY/@RMM 2025
+    ! Snow parameterization options @AXRY/@RMM 2025
      integer  :: snow_partition_type   ! rain-snow partition: 0=CLM, 1=wetbulb thresh, 2=wetbulb linear, 3=Dai, 4=Jennings
      real(r8) :: tw_threshold          ! wetbulb temperature threshold for snow [K], default 274.15
      real(r8) :: thin_snow_damping     ! damping factor for thin snow energy [0-1], 0=off
@@ -311,6 +304,7 @@ module clmtype
      real(r8) :: snowage_dirt_soot_vis   ! VIS dirt/soot factor [-], default 0.3
      real(r8) :: snowage_dirt_soot_nir   ! NIR dirt/soot factor [-], default 0.3
      real(r8) :: snowage_reset_factor    ! fresh snow reset factor [-], default 0.1
+
 
      real(r8) :: eflx_snomelt   ! added to be consistent with lsm hybrid code
      real(r8) :: eflx_impsoil   ! implicit evaporation for soil temperature equation (W/m**2)
