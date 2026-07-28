@@ -1,0 +1,1 @@
+/usr/bin/mpicc -O2   -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/test15.dir/link.d CMakeFiles/test15.dir/test15.c.o -o test15  ../../libamps.a

@@ -1,0 +1,1 @@
+/usr/bin/mpicc -O2 -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/pfsol-to-vtk.dir/link.d "CMakeFiles/pfsol-to-vtk.dir/pfsol-to-vtk.c.o" -o pfsol-to-vtk  -Wl,-rpath,:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

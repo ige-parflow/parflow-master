@@ -1,0 +1,2 @@
+/usr/bin/ar qc libpfkinsol.a CMakeFiles/pfkinsol.dir/iterativ.c.o CMakeFiles/pfkinsol.dir/kinsol.c.o CMakeFiles/pfkinsol.dir/kinspgmr.c.o CMakeFiles/pfkinsol.dir/llnlmath.c.o CMakeFiles/pfkinsol.dir/spgmr.c.o
+/usr/bin/ranlib libpfkinsol.a

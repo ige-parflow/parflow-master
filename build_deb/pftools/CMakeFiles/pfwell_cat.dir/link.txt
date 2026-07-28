@@ -1,0 +1,1 @@
+/usr/bin/mpicc -O2 -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/pfwell_cat.dir/link.d CMakeFiles/pfwell_cat.dir/pfwell_cat.c.o CMakeFiles/pfwell_cat.dir/well.c.o -o pfwell_cat  -Wl,-rpath,:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

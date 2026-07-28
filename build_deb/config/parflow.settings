@@ -1,0 +1,49 @@
+# ParFlow C Configuration Summary
+=================================
+
+# General
+---------
+ParFlow Version:	v3.13.0
+Hostname:		ige-calcul1
+OS:			Linux-6.12.95+deb13-amd64
+Build Directory: 	/workdir2/phyrev/reverdya/parflow/parflow_src/snow_params/build_deb
+Install Prefix:         /workdir2/phyrev/reverdya/parflow/parflow_comp/snow_params_old_rst_debug_O2
+
+# Compiling Options
+-------------------
+
+Build Type:		Release
+
+C Compiler:		/usr/bin/mpicc
+CXX Compiler:		/usr/bin/mpic++
+Fortran Compiler:	/usr/bin/mpif90
+
+C Flags:		-O2
+CXX Flags:		-O2
+Fortran Flags: 		-O2 -fbacktrace -g -fbounds-check -fimplicit-none
+
+# Features Enabled
+------------------
+AMPS Comm Layer:	mpi1
+AMPS Sequential IO:	ON
+SLURM Support:		
+
+CLM Support:		yes
+Hypre Support:		yes
+Sundials Support:	
+
+Tcl Support:		yes
+Python Support:		
+
+Silo Support:		yes
+NetCDF Support:	yes
+HDF5 Support:		
+Zlib Support:		
+SZlib Support:		
+
+Backend: 		none
+OMP Support:		
+Kokkos Support:		
+CUDA Support:		
+RMM Support:		
+Umpire Support:         

@@ -1,0 +1,1 @@
+/usr/bin/mpicc -O2 -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/gmssol2pfsol.dir/link.d CMakeFiles/gmssol2pfsol.dir/gmsSOL2pfsol.c.o CMakeFiles/gmssol2pfsol.dir/gmsreadSOL.c.o CMakeFiles/gmssol2pfsol.dir/geom_sort_vertices.c.o -o gmssol2pfsol  -Wl,-rpath,:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

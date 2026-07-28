@@ -162,8 +162,16 @@ subroutine drv_restart (rw, drv, tile, clm, rank, istep_pf)
      read(40) h2osno               !CLM Snow Cover, Water Equivalent [mm] 
      read(40) snowage              !CLM Non-dimensional snow age [-]
      ! Initialize VIS/NIR snow ages from legacy - will be overwritten if new format @RMM 2025
-     snowage_vis = snowage
-     snowage_nir = snowage
+     !snowage_vis = snowage
+     !snowage_nir = snowage
+     ! Correction by @AXRY because otherwise there was a restart error (mismatch between read and write)
+     read(40, iostat=ios) snowage_vis
+     read(40, iostat=ios) snowage_nir
+     if (ios /= 0) then
+        snowage_vis = snowage
+        snowage_nir = snowage
+     endif    
+     ! @AXRY end
      read(40) snowdp               !CLM Snow Depth [m]
      read(40) h2ocan               !CLM Depth of Water on Foliage [mm]
      read(40) frac_sno             !CLM Fractional Snow Cover [-]

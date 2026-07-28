@@ -1,0 +1,1 @@
+/usr/bin/mpic++ -O2 -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/pfmaskdownsize.dir/link.d CMakeFiles/pfmaskdownsize.dir/pfmaskdownsize.cpp.o -o pfmaskdownsize  -Wl,-rpath,:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

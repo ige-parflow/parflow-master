@@ -1,0 +1,11 @@
+# The fortran modules provided by this target.
+provides
+ clm_varcon.mod
+ clm_varpar.mod
+ clmtype.mod
+ drv_gridmodule.mod
+ drv_module.mod
+ drv_tilemodule.mod
+ infnan.mod
+ parflow_config.mod
+ precision.mod

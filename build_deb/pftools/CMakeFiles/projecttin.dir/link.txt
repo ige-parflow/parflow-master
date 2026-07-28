@@ -1,0 +1,1 @@
+/usr/bin/mpicc -O2 -O3 -DNDEBUG -Wl,--dependency-file=CMakeFiles/projecttin.dir/link.d CMakeFiles/projecttin.dir/projecttin.c.o CMakeFiles/projecttin.dir/gmsreadTIN.c.o -o projecttin  -Wl,-rpath,::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -lm
