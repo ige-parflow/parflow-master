@@ -18,7 +18,6 @@ subroutine drv_restart (rw, drv, tile, clm, rank, istep_pf)
   !
   ! REVISION HISTORY:
   !  22  Oct 1999: Jon Radakovich and Paul Houser; Initial code
-  ! @AXRY imported @RMM2025 snow parameters modification
   !=========================================================================
   ! RESTART FILE FORMAT(fortran sequential binary):
   !  yr,mo,da,hr,mn,ss,vclass,nch !Restart time,Veg class,no.tiles, no.soil lay 
@@ -63,8 +62,8 @@ subroutine drv_restart (rw, drv, tile, clm, rank, istep_pf)
   real(r8), pointer :: t_veg(:)       ! CLM Leaf Temperature [K]
   real(r8), pointer :: h2osno(:)      ! CLM Snow Cover, Water Equivalent [mm]
   real(r8), pointer :: snowage(:)     ! CLM Non-dimensional snow age [-]
-  real(r8), pointer :: snowage_vis(:) ! CLM VIS band snow age [-] @RMM 2025
-  real(r8), pointer :: snowage_nir(:) ! CLM NIR band snow age [-] @RMM 2025
+  real(r8), pointer :: snowage_vis(:) ! CLM VIS band snow age [-] @AXRY after @RMM 2025
+  real(r8), pointer :: snowage_nir(:) ! CLM NIR band snow age [-] @AXRY after @RMM 2025
   real(r8), pointer :: snowdp(:)      ! CLM Snow Depth [m] 
   real(r8), pointer :: h2ocan(:)      ! CLM Depth of Water on Foliage [mm]
 
@@ -97,8 +96,8 @@ subroutine drv_restart (rw, drv, tile, clm, rank, istep_pf)
   real(r8) :: g_t_veg(drv%nc,drv%nr)          ! CLM Leaf Temperature [K] 
   real(r8) :: g_h2osno(drv%nc,drv%nr)         ! CLM Snow Cover, Water Equivalent [mm] 
   real(r8) :: g_snowage(drv%nc,drv%nr)        ! CLM Non-dimensional snow age [-]
-  real(r8) :: g_snowage_vis(drv%nc,drv%nr)   ! CLM VIS band snow age [-] @RMM 2025
-  real(r8) :: g_snowage_nir(drv%nc,drv%nr)   ! CLM NIR band snow age [-] @RMM 2025
+  real(r8) :: g_snowage_vis(drv%nc,drv%nr)   ! CLM VIS band snow age [-] @AXRY after @RMM 2025
+  real(r8) :: g_snowage_nir(drv%nc,drv%nr)   ! CLM NIR band snow age [-] @AXRY after @RMM 2025
   real(r8) :: g_snowdp(drv%nc,drv%nr)         ! CLM Snow Depth [m] 
   real(r8) :: g_h2ocan(drv%nc,drv%nr)         ! CLM Depth of Water on Foliage [mm]
   real(r8) :: g_frac_sno(drv%nc,drv%nr)       ! CLM Fractional Snow Cover [-]
@@ -161,17 +160,9 @@ subroutine drv_restart (rw, drv, tile, clm, rank, istep_pf)
      read(40) t_veg                !CLM Leaf Temperature [K] 
      read(40) h2osno               !CLM Snow Cover, Water Equivalent [mm] 
      read(40) snowage              !CLM Non-dimensional snow age [-]
-     ! Initialize VIS/NIR snow ages from legacy - will be overwritten if new format @RMM 2025
-     !snowage_vis = snowage
-     !snowage_nir = snowage
-     ! Correction by @AXRY because otherwise there was a restart error (mismatch between read and write)
-     read(40, iostat=ios) snowage_vis
-     read(40, iostat=ios) snowage_nir
-     if (ios /= 0) then
-        snowage_vis = snowage
-        snowage_nir = snowage
-     endif    
-     ! @AXRY end
+     ! Initialize VIS/NIR snow ages from legacy - will be overwritten if new format @AXRY after @RMM 2025
+     snowage_vis = snowage
+     snowage_nir = snowage
      read(40) snowdp               !CLM Snow Depth [m]
      read(40) h2ocan               !CLM Depth of Water on Foliage [mm]
      read(40) frac_sno             !CLM Fractional Snow Cover [-]
@@ -220,13 +211,30 @@ subroutine drv_restart (rw, drv, tile, clm, rank, istep_pf)
         enddo
      enddo
 
-     ! Read coszen_avg from end of file (added for SZA frac_sno)
-     ! Use iostat for backward compat with old restarts that lack this field
+     ! Read the appended new fields from the END of file (order must match the
+     ! rw=2 write block). iostat gives backward compat: old restarts that lack
+     ! these fields keep the legacy defaults set above (vis/nir = snowage,
+     ! coszen_avg = 0). Fixed 2026-07-14: vis/nir were previously written
+     ! mid-record with no matching read, desyncing the stream by 2 records. @AXRY after RMM
      read(40, iostat=ios) coszen_avg
      if (ios /= 0) then
         coszen_avg(:) = 0.0d0
         if (rank.eq.0) then
            write(*,*) 'CLM Restart: coszen_avg not found, defaulting to 0.0'
+        endif
+     endif
+     read(40, iostat=ios) snowage_vis
+     if (ios /= 0) then
+        snowage_vis = snowage
+        if (rank.eq.0) then
+           write(*,*) 'CLM Restart: snowage_vis not found, defaulting to snowage'
+        endif
+     endif
+     read(40, iostat=ios) snowage_nir
+     if (ios /= 0) then
+        snowage_nir = snowage
+        if (rank.eq.0) then
+           write(*,*) 'CLM Restart: snowage_nir not found, defaulting to snowage'
         endif
      endif
 
@@ -335,8 +343,8 @@ subroutine drv_restart (rw, drv, tile, clm, rank, istep_pf)
                     clm(t)%t_veg = t_veg(n)
                     clm(t)%h2osno = h2osno(n)
                     clm(t)%snowage = snowage(n)
-                    clm(t)%snowage_vis = snowage_vis(n)  ! @RMM 2025
-                    clm(t)%snowage_nir = snowage_nir(n)  ! @RMM 2025
+                    clm(t)%snowage_vis = snowage_vis(n)  ! @AXRY after @RMM 2025
+                    clm(t)%snowage_nir = snowage_nir(n)  ! @AXRY after @RMM 2025
                     clm(t)%snowdp = snowdp(n)
                     clm(t)%h2ocan = h2ocan(n)
                     clm(t)%frac_sno = frac_sno(n)
@@ -373,8 +381,8 @@ subroutine drv_restart (rw, drv, tile, clm, rank, istep_pf)
                  clm(t)%t_veg = g_t_veg(tile(t)%col,tile(t)%row)
                  clm(t)%h2osno = g_h2osno(tile(t)%col,tile(t)%row)
                  clm(t)%snowage = g_snowage(tile(t)%col,tile(t)%row)
-                 clm(t)%snowage_vis = g_snowage_vis(tile(t)%col,tile(t)%row)  ! @RMM 2025
-                 clm(t)%snowage_nir = g_snowage_nir(tile(t)%col,tile(t)%row)  ! @RMM 2025
+                 clm(t)%snowage_vis = g_snowage_vis(tile(t)%col,tile(t)%row)  ! @AXRY after @RMM 2025
+                 clm(t)%snowage_nir = g_snowage_nir(tile(t)%col,tile(t)%row)  ! @AXRY after @RMM 2025
                  clm(t)%snowdp = g_snowdp(tile(t)%col,tile(t)%row)
                  clm(t)%h2ocan = g_h2ocan(tile(t)%col,tile(t)%row)
                  clm(t)%frac_sno = g_frac_sno(tile(t)%col,tile(t)%row)
@@ -511,8 +519,6 @@ subroutine drv_restart (rw, drv, tile, clm, rank, istep_pf)
         write(40) clm%t_veg                 !CLM Leaf Temperature [K]
         write(40) clm%h2osno                !CLM Snow Cover, Water Equivalent [mm]
         write(40) clm%snowage               !CLM Non-dimensional snow age [-]
-        write(40) clm%snowage_vis           !CLM VIS band snow age [-] @RMM 2025
-        write(40) clm%snowage_nir           !CLM NIR band snow age [-] @RMM 2025
         write(40) clm%snowdp                !CLM Snow Depth [m]
         write(40) clm%h2ocan                !CLM Depth of Water on Foliage [mm]
         write(40) clm%frac_sno              !CLM Fractional Snow Cover [-]
@@ -561,8 +567,14 @@ subroutine drv_restart (rw, drv, tile, clm, rank, istep_pf)
            write(40) tmptileni     !CLM Average Ice Content [kg/m2]
         enddo
 
-        ! New fields appended at end for backward-compatible restarts
+        ! New fields appended at END for backward/forward-compatible restarts
+        ! (read back with iostat; old restarts lacking them fall back to legacy).
+        ! snowage_vis/nir MUST live here, NOT mid-record -- putting them after
+        ! snowage desynced the read by 2 records ("I/O past end of record"),
+        ! since the read re-derives them from legacy snowage (fixed 2026-07-14). @AXRY after @RMM
         write(40) clm%coszen_avg            !CLM Smoothed cos(SZA) for SZA frac_sno [-]
+        write(40) clm%snowage_vis           !CLM VIS band snow age [-] @RMM 2025
+        write(40) clm%snowage_nir           !CLM NIR band snow age [-] @RMM 2025
 
         close(40)
 
