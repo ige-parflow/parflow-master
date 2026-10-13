@@ -857,9 +857,15 @@ void            PrintCLMVTK(
   CLMvars[8] = "qflx_tran_veg";
   CLMvars[9] = "qflx_infl";
   CLMvars[10] = "swe_out";
-  CLMvars[11] = "t_grnd";
-  CLMvars[12] = "qflx_qirr";
-  CLMvars[13] = "tsoil";
+  CLMvars[11] = "snowdp";//AR new variables
+  CLMvars[12] = "snoalb";
+  CLMvars[13] = "surfalb";
+  CLMvars[14] = "snowage";
+  CLMvars[15] = "ndvi";
+  CLMvars[16] = "qflx_snomelt";//AR end new variables
+  CLMvars[17] = "t_grnd";
+  CLMvars[18] = "qflx_qirr";
+  CLMvars[19] = "tsoil";
 
   //This uses the mixed VTK BINARY legacy format, writes as either double or float
   fprintf(fp, "# vtk DataFile Version 2.0 \n");
@@ -984,9 +990,15 @@ void            PrintTFG_CLMVTK(
   CLMvars[8] = "qflx_tran_veg";
   CLMvars[9] = "qflx_infl";
   CLMvars[10] = "swe_out";
-  CLMvars[11] = "t_grnd";
-  CLMvars[12] = "qflx_qirr";
-  CLMvars[13] = "tsoil";
+  CLMvars[11] = "snowdp";//AR new variables
+  CLMvars[12] = "snoalb";
+  CLMvars[13] = "surfalb";
+  CLMvars[14] = "snowage";
+  CLMvars[15] = "ndvi";
+  CLMvars[16] = "qflx_snomelt";//AR end new variables
+  CLMvars[17] = "t_grnd";
+  CLMvars[18] = "qflx_qirr";
+  CLMvars[19] = "tsoil";
 
   //This uses the mixed VTK BINARY legacy format, writes as either double or float
 

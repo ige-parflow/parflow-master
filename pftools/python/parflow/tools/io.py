@@ -1972,10 +1972,17 @@ class DataAccessor:
             "qflx_tran_veg",
             "qflx_infl",
             "swe_out",
+            "snowdp",
+            "snoalb",
+            "surfalb",
+            "snowage",
+            "ndvi",
+            "qflx_snomelt",
             "t_grnd",
             "qflx_qirr",
             "t_soil",
         )
+#AXRY added 6 new variables
 
     @property
     def clm_output_diagnostics(self):
@@ -2028,6 +2035,30 @@ class DataAccessor:
     @property
     def clm_output_swe_out(self):
         return self._clm_output_bin("swe_out", float)
+
+    @property
+    def clm_output_snowdp(self):
+        return self._clm_output_bin("snowdp", float)
+
+    @property
+    def clm_output_snoalb(self):
+        return self._clm_output_bin("snoalb", float)
+
+    @property
+    def clm_output_surfalb(self):
+        return self._clm_output_bin("surfalb", float)
+
+    @property
+    def clm_output_snowage(self):
+        return self._clm_output_bin("snowage", float)
+
+    @property
+    def clm_output_ndvi(self):
+        return self._clm_output_bin("ndvi", float)
+
+    @property
+    def clm_output_qflx_snomelt(self):
+        return self._clm_output_bin("qflx_snomelt", float)
 
     @property
     def clm_output_t_grnd(self):
