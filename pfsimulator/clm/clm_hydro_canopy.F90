@@ -173,7 +173,7 @@ subroutine clm_hydro_canopy (clm)
      dz_snowf = 0.                            ! rate of snowfall, snow depth/s (m/s)
   else
      ! @RMM 2025: Select rain-snow partitioning method
-     ! snow_partition_type: 0=CLM linear, 1=wetbulb thresh, 2=wetbulb linear, 3=Dai, 4=Jennings
+     ! snow_partition_type: 0=CLM linear, 1=wetbulb thresh, 2=wetbulb sigmoid, 3=Dai, 4=Jennings ! @AXRY
      select case (clm%snow_partition_type)
 
      case (1, 2)  ! Wetbulb-based methods
@@ -204,7 +204,7 @@ subroutine clm_hydro_canopy (clm)
              - 4.686035d0
 
         ! Convert wetbulb to Kelvin for comparison
-        t_wb_k = t_wb + tfrz
+        !t_wb_k = t_wb + tfrz
 
         if (clm%snow_partition_type == 1) then
            ! Wetbulb threshold method: all snow below threshold, all rain above
@@ -213,16 +213,23 @@ subroutine clm_hydro_canopy (clm)
            else
               flfall = 1.0d0  ! all rain
            endif
-        else  ! case 2: wetbulb linear
+
+       ! @AXRY modifying the wetbulb linear case to introduce my own sigmoid of Twetbulb
+        else  ! case 2: wetbulb sigmoid
+           psnow = 1.0d0 / (1.0d0 + exp(2.18d0 * (t_wb - 1.73d0)))**4.47d0
+           flfall = 1.0d0 - psnow
+
+       !else  ! case 2: wetbulb linear
            ! Linear transition over configurable range centered on threshold
-           if (t_wb_k <= clm%tw_threshold - clm%snow_transition_width) then
-              flfall = 0.0d0
-           else if (t_wb_k >= clm%tw_threshold + clm%snow_transition_width) then
-              flfall = 1.0d0
-           else
-              flfall = (t_wb_k - (clm%tw_threshold - clm%snow_transition_width)) / &
-                       (2.0d0 * clm%snow_transition_width)
-           endif
+          !if (t_wb_k <= clm%tw_threshold - clm%snow_transition_width) then
+             !flfall = 0.0d0
+          !else if (t_wb_k >= clm%tw_threshold + clm%snow_transition_width) then
+             !flfall = 1.0d0
+          !else
+             !flfall = (t_wb_k - (clm%tw_threshold - clm%snow_transition_width)) / &
+                      !(2.0d0 * clm%snow_transition_width)
+          !endif
+        ! end @AXRY
         endif
 
      case (3)  ! Dai (2008) sigmoidal method
